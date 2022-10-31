@@ -15,7 +15,7 @@ interface UserInterface  {
 interface AuthContextInterface {
     user: UserInterface | null,
     isLoading : boolean,
-    Logout?: () => void
+    isLogout: (path : string) => void
 }
 
 
@@ -24,13 +24,14 @@ type TypeProps = {
     children: ReactNode
 }
 
-export const AuthContext = createContext({} as AuthContextInterface);
+export const AuthContext = createContext<AuthContextInterface>({
+    user: null,
+    isLoading: false,
+    isLogout: () => {},
+});
 const { Provider } = AuthContext;
 
-export const useAuth = () => {
-  const auth = useContext(AuthContext)
-  return {auth}
-}
+export const useAuth = () => useContext(AuthContext);
 
   
 export const AuthProvider = ({ staticProps, children }: TypeProps) => {
@@ -38,12 +39,13 @@ export const AuthProvider = ({ staticProps, children }: TypeProps) => {
     const [user, setUser] = useState<UserInterface | null>(null);
     const [isLoading , setIsLoading] = useState(false);
 
+    const local_key = "accessToken";
     console.log("2.AuthProvider",staticProps)  
 
     useEffect(() => {
         const fetchUser = async() =>{
             setIsLoading(true)
-                const accessToken =  localStorage.getItem("accessToken");
+                const accessToken =  localStorage.getItem(local_key);
                 console.log("2.0.AuthProvider",accessToken) 
                 if(accessToken){
                     console.log("2.1.AuthProvider",accessToken)  
@@ -65,7 +67,7 @@ export const AuthProvider = ({ staticProps, children }: TypeProps) => {
                         
                     } else {
                         //setUser(null)
-                        localStorage.removeItem("accessToken");
+                        localStorage.removeItem(local_key);
                         router.replace("/login")
                     }
                 }else{
@@ -76,20 +78,19 @@ export const AuthProvider = ({ staticProps, children }: TypeProps) => {
         if(staticProps.protected) fetchUser();
     },[router,staticProps])
 
-    // const Logout = ()=> {{
-    //     setUser(prev=>prev = null)
-    // }}
-    
 
-    const Logout = useCallback(() => {
-        setUser(prev=>prev = null)
-      }, []);
+
+    const isLogout = useCallback((path: string) => {
+        setUser(prev=>prev = null);
+        localStorage.removeItem(local_key);
+        router.push(path as string | "/")
+    }, [router]);
     
-      const contextValue: AuthContextInterface = useMemo(() => ({
+    const contextValue: AuthContextInterface = useMemo(() => ({
         user,
         isLoading,
-        Logout
-      }), [user, isLoading, Logout]);
+        isLogout
+    }), [user, isLoading, isLogout]);
 
     console.log("2.5.AuthProvider",user)  
 

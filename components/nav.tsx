@@ -1,18 +1,15 @@
 import Link from "next/link";
 import { useAuth } from './auth';
-import {useRouter} from "next/router";
 
 export const Nav = () => {
-  const {auth} = useAuth();
-  const router = useRouter();
+  const {isLoading,user,isLogout} = useAuth();
 
-  console.log(auth)
+  //console.log(auth)
   const handleLogout = () => {
-    if(auth?.Logout) {
-        auth.Logout();
-    } 
-    localStorage.removeItem("accessToken");
-    router.push("/login")
+    if(user && user.isAuthenticated){
+      isLogout("/login");
+    }
+   
   }
   return (
     <nav className="nav">
@@ -29,8 +26,8 @@ export const Nav = () => {
         <li>
         <Link href="/me">Me</Link>
         </li>
-        {!auth.isLoading && auth?.user ? (
-           <li>{auth.user.name} | <span onClick={handleLogout}>Lougout</span></li>
+        {!isLoading && user !== null ?(
+           <li>{user.name} | <span onClick={handleLogout}>Lougout</span></li>
           
         )
         : (
